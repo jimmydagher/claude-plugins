@@ -35,11 +35,12 @@ Code Reviewer
 
 ## Setup
 
-No other plugin is required for `intake` — it runs its own four-lens code
-review directly. For the standard it checks against, `intake` prefers the
-`sdsi` plugin (invoked by name, `sdsi:sdsi`) if it's installed; otherwise it
-reads a project-local `SDSI.md`, or one in a shared location, if present —
-no other configuration required either way.
+`code-reviewer` declares a dependency on the `sdsi` plugin, so installing
+`code-reviewer` installs `sdsi` alongside it automatically — nothing extra
+to do. `intake` runs its own four-lens code review directly regardless,
+and invokes `sdsi:sdsi` by name for the coding standard it checks against;
+if `sdsi` is ever disabled, it falls back to a project-local `SDSI.md`, or
+one in a shared location, if present.
 
 ## Usage
 

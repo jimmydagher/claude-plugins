@@ -62,13 +62,16 @@ process resume cleanly in a new session instead of re-deriving everything.
 
 - **SDSI** (Software Development Standard Instructions) — the standard
   `/intake` hands to its standards lens explicitly as *the* standard to
-  check against, not generic best practices. Tried in this order:
+  check against, not generic best practices. `code-reviewer`'s
+  `plugin.json` declares `sdsi` as a dependency, so installing
+  `code-reviewer` installs `sdsi` automatically — it's normally always
+  there. Even so, resolution is tried in this order, defensively:
   1. **The `sdsi` plugin, invoked by name** — `sdsi:sdsi` — if it's
-     installed in this environment. Preferred: a by-name skill invocation
-     resolves correctly regardless of where either plugin is installed,
-     unlike a path reaching into another plugin's own files.
+     installed and enabled in this environment. Preferred: a by-name skill
+     invocation resolves correctly regardless of where either plugin is
+     installed, unlike a path reaching into another plugin's own files.
   2. **A project-local `SDSI.md`**, or one found in a shared location, if
-     the `sdsi` plugin isn't installed.
+     `sdsi` has been disabled or uninstalled directly.
   3. If neither exists anywhere reachable, say so and proceed on general
      good-practice grounds instead of blocking.
 

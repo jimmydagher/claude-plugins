@@ -1,9 +1,10 @@
 {
   "name": "code-reviewer",
-  "version": "0.4.0",
-  "description": "A staged workflow for modernizing, refactoring, or remediating an existing codebase, split into six skills: an orchestrator (code-reviewer) plus one per phase (intake, catalog, strategy, execute, validate). intake runs its own four-lens code review (security, standards, efficiency, infrastructure) directly, inline — code review is this plugin's own job, not delegated to the separate council plugin, which reviews documentation and plans instead, not code. catalog deduplicates and classifies findings; strategy builds a sequencing plan with the user (shared/infrastructure code first, business logic last); execute implements one stage at a time, running old and new code side by side when risky; validate is the human approval gate between stages. For the coding standard intake checks against, it depends on the sdsi plugin's /sdsi:sdsi when installed, falling back to a project-local SDSI.md otherwise.",
+  "version": "0.5.0",
+  "description": "A staged workflow for modernizing, refactoring, or remediating an existing codebase, split into six skills: an orchestrator (code-reviewer) plus one per phase (intake, catalog, strategy, execute, validate). intake runs its own four-lens code review (security, standards, efficiency, infrastructure) directly, inline — code review is this plugin's own job, not delegated to the separate council plugin, which reviews documentation and plans instead, not code. catalog deduplicates and classifies findings; strategy builds a sequencing plan with the user (shared/infrastructure code first, business logic last); execute implements one stage at a time, running old and new code side by side when risky; validate is the human approval gate between stages. Declares a dependency on the sdsi plugin, so installing code-reviewer installs sdsi automatically; intake invokes /sdsi:sdsi for the coding standard it checks against, falling back to a project-local SDSI.md in the rare case sdsi ends up disabled.",
   "author": {
     "name": "Jimmy Dagher"
   },
-  "keywords": ["legacy code", "refactor", "modernization", "migration", "tech debt", "code review", "dependency upgrade", "language migration", "strangler fig", "code remediation", "SDSI", "standards"]
+  "keywords": ["legacy code", "refactor", "modernization", "migration", "tech debt", "code review", "dependency upgrade", "language migration", "strangler fig", "code remediation", "SDSI", "standards"],
+  "dependencies": ["sdsi"]
 }
