@@ -138,8 +138,15 @@ project-root/
 │       └── prod.yaml
 ├── docs/                       # operational documentation — see §20
 ├── scripts/                    # deploy/setup/maintenance tooling, not
-│   ├── ps1/                    #   shipped application code — see below
-│   └── python/
+│   ├── git-hooks/              #   shipped application code — see below.
+│   │                           #   Non-negotiable, every project: §17's
+│   │                           #   version-bump/changelog-promotion hook
+│   │                           #   pair (pre-commit, commit-msg) lives
+│   │                           #   here, copied from the sdsi plugin's
+│   │                           #   own scripts/git-hooks/ at setup (§24)
+│   ├── ps1/
+│   └── python/                 #   scripts/python/bump_changelog.py is
+│                                #   the other §17 hook resource
 ├── docker/
 ├── .vscode/                   # local run/debug configuration — see §18
 ├── .gitignore                  # see §16
@@ -174,10 +181,13 @@ first use.
 
 **`scripts/`** holds operational tooling — deployment, environment setup,
 config publishing, one-off maintenance — organized by language
-(`scripts/ps1/`, `scripts/python/`, and so on as needed). It's support
-tooling for running and operating the project, not part of the shipped
-application: `src/` doesn't import from it, and it doesn't import from
-`src/`.
+(`scripts/ps1/`, `scripts/python/`, and so on as needed), **plus
+`scripts/git-hooks/`, which is not optional.** §17's version-bump/
+changelog-promotion hook pair lives there in every project, full stop —
+copied in at scaffolding time (§24), not written from scratch per
+project. It's support tooling for running and operating the project, not
+part of the shipped application: `src/` doesn't import from it, and it
+doesn't import from `src/`.
 
 **The top-level source folder's name isn't fixed to `src/`.** Renaming it
 to whatever fits the project's own domain (`site/` for a website, and
@@ -658,17 +668,24 @@ python main.py --task SOME-OPERATION
   (`*.bak`, `*.orig`), and any config file rendered with real values
   substituted in by a deploy script. Nothing that isn't needed to build,
   test, or run the project in production has any business being tracked.
-- A pre-commit (or equivalent) hook is a good place to **enforce documentation
-  discipline mechanically** — e.g. refuse a commit that touches shippable
-  code without a corresponding `CHANGELOG.md` entry (§17). Keep an escape
-  hatch (`--no-verify`) for the genuinely-not-a-release commit, and repeat
-  the check server-side in CI where the escape hatch can't reach. See §17
-  for a fuller automation of this — a hook pair that bumps the version and
-  promotes the changelog for you.
+- A pre-commit (or equivalent) hook **mechanically enforces documentation
+  discipline** — refusing a commit that touches shippable code without a
+  corresponding `CHANGELOG.md` entry (§17). Keep an escape hatch
+  (`--no-verify`) for the genuinely-not-a-release commit, and repeat the
+  check server-side in CI where the escape hatch can't reach. This isn't
+  a suggestion — see §17, which makes it a non-negotiable, shipped hook
+  pair that bumps the version and promotes the changelog for you
+  automatically, in every project.
 
 ---
 
 ## 17. Versioning & Changelog
+
+**Non-negotiable, for every project, regardless of size, stack, or
+committer count** — same tier as §1's four working principles. Not
+something to adopt "once things are more established": it starts with
+the project (§24's day-one skeleton includes the hooks below, wired and
+tested, before any feature work).
 
 - One `VERSION` file at the project root is the single source of truth for
   the current version — starting at `0.1.0` for a new project (§24); bump
@@ -798,39 +815,59 @@ python main.py --task SOME-OPERATION
   existing, already-tested artifact**, never a rebuild — a rebuild is a
   different artifact than the one that was tested, whatever the version
   number says.
-- **Every commit names the version it belongs to in its own message —
-  not just the commits that bump it.** A commit that bumps the version
-  carries a plain `VERSION x.x.x` line (in the commit body, or as the
-  subject itself: `VERSION x.x.x — <what changed>`); a docs-only commit
-  that doesn't bump anything still names the version it landed in, tagged
-  `VERSION x.x.x-updated` so it reads distinctly from an actual bump. This
-  makes `git log` searchable by version without cross-referencing the
-  changelog for which commit shipped what, and leaves no commit — bump or
-  not — without an answer to "what version was this."
+- **Every commit's message *is* the version it belongs to — the whole
+  message, overwritten outright, never appended to whatever was
+  typed.** `VERSION x.x.x` for a commit that bumps the version,
+  `VERSION x.x.x-updated` for one that doesn't (docs-only, or anything
+  else with no code diff) — nothing else in the message, no combined
+  subject-plus-description form. The commit message becomes a pure
+  version pointer; the actual description of what changed belongs
+  entirely in `CHANGELOG.md`'s entry for that version, never split
+  between the two. This makes `git log` a clean, searchable version
+  timeline, and leaves no commit — bump or not — without an answer to
+  "what version was this" or a second, competing home for release notes.
 - Each `## VERSION x.x.x` heading is **written once and never silently
   rewritten** — a mistake in an already-shipped entry gets corrected by a
   new version and a new entry, not a rewrite of one already released.
 
 ### Automating the version bump and changelog promotion
 
-The policy above is genuinely automatable as a git hook, for a project
-with few enough committers that a merge race isn't a design concern:
+**Required, not optional tooling** — the policy above is enforced by a
+git hook pair, not left to manual discipline, on every project this
+standard governs. The `sdsi` plugin ships a working, tested pair at its
+own `scripts/git-hooks/` (`pre-commit`, `commit-msg`) plus the promotion
+helper at `scripts/python/bump_changelog.py` — copy all three into a new
+project's own `scripts/` (§24's day-one skeleton does this) and wire them
+with `git config core.hooksPath scripts/git-hooks` rather than writing
+the mechanism from scratch per project. A very high-commit-concurrency
+project will occasionally see an ordinary merge conflict on `VERSION` —
+resolve it by hand like any other conflict; that's not a reason to skip
+the hooks.
 
 - **Two hooks, not one.** `pre-commit` decides whether the commit touches
   code, bumps `VERSION`, and promotes `CHANGELOG.md`'s `Unreleased`
-  section — all staged into the same commit. `commit-msg` appends the
-  version to the commit message, because the message doesn't exist yet
-  at `pre-commit` time (hook order: `pre-commit` → `prepare-commit-msg` →
-  message finalized → `commit-msg` → `post-commit`) — it reads whether
-  `pre-commit` staged a `VERSION` change this run to decide which of the
-  two message-tag forms above to append: plain `VERSION x.x.x` if it did,
-  `VERSION x.x.x-updated` (the version already in the file, unchanged) if
-  it didn't.
-- **Guard against double-appending the version line on `git commit
-  --amend`** — check whether the exact line is already present in the
-  message file before appending, in both hooks. Without that check,
-  amending a commit re-runs `commit-msg` against a message that already
-  has the line, stacking a second copy onto it.
+  section — all staged into the same commit. `commit-msg` overwrites the
+  commit message outright with the version line, because the message
+  doesn't exist yet at `pre-commit` time (hook order: `pre-commit` →
+  `prepare-commit-msg` → message finalized → `commit-msg` →
+  `post-commit`) — it reads whether `pre-commit` staged a `VERSION`
+  change this run to decide which line replaces the message: plain
+  `VERSION x.x.x` if it did, `VERSION x.x.x-updated` (the version already
+  in the file, unchanged) if it didn't.
+- **Overwrite, never append — and that's what makes it idempotent under
+  `git commit --amend`.** Re-running `commit-msg` against an
+  already-tagged message just writes the same line again; there's no
+  append-guard to get wrong, unlike an append-based version of this hook
+  (which needs one, precisely because appending twice stacks a second
+  copy onto the message).
+- **The changelog promotion refuses the commit if `Unreleased` is
+  empty** — every one of its four subsections still reading `(none)`. An
+  empty entry silently promoted into a version heading defeats the whole
+  point of this section: reading `CHANGELOG.md` for version `x.x.x` has
+  to actually show what changed. Add the bullet first (any of the four
+  subsections), then commit; the escape hatch is the same one as
+  anywhere else — `--no-verify`, for the rare commit that genuinely isn't
+  a release.
 - **A simple file-path heuristic decides "docs-only"** (everything staged
   falls under a docs folder or matches a doc-file extension) rather than
   trying to infer semantic intent from a diff.
@@ -838,11 +875,14 @@ with few enough committers that a merge race isn't a design concern:
   distinction isn't inferable from a diff, so if `VERSION` is *already*
   staged with a change when the hook runs, treat that as the deliberate
   choice and only handle the changelog promotion.
-- **Store hook scripts in a tracked repo folder** (`scripts/`, §3) and
-  wire them via `git config core.hooksPath <folder>` — never rely on
-  copying into the untracked, unversioned `.git/hooks/` directory by
-  hand. Wire this into whatever script already bootstraps local dev, so
-  a fresh clone gets it automatically.
+- **A merge commit is exempt from both hooks** — it brings in commits
+  already tagged and changelogged on their own branch, and its message
+  isn't the place to re-describe them.
+- **Store hook scripts in `scripts/git-hooks/`** (§3) and wire them via
+  `git config core.hooksPath scripts/git-hooks` — never rely on copying
+  into the untracked, unversioned `.git/hooks/` directory by hand. Wire
+  this into whatever script already bootstraps local dev, so a fresh
+  clone gets it automatically.
 - **Test a new hook against a real, throwaway commit before trusting
   it** — create a trivial staged change, commit for real, inspect the
   actual result; don't reason from the script's source alone (§22's
@@ -1268,6 +1308,11 @@ this sequence rather than treating it as an ordinary feature request.
      `main.py` (§3), even if each starts nearly empty.
    - `tests/` (§14), `config/default.yaml` + `config/override/` (§6),
      `docs/` (§20), `scripts/` (§3), `docker/`, `.vscode/` (§18).
+   - **Copy `scripts/git-hooks/{pre-commit,commit-msg}` and
+     `scripts/python/bump_changelog.py` from the `sdsi` plugin's own
+     resources** into the new project's `scripts/`, then run
+     `git config core.hooksPath scripts/git-hooks` — part of this same
+     skeleton commit, not a later follow-up (§17, non-negotiable).
    - Commit this skeleton on its own, before any feature work — it's the
      thing every later session assumes already exists.
    - Once there's at least this skeleton in place — enough for the

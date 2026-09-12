@@ -1,0 +1,48 @@
+#!/bin/sh
+# SDSI §17 — non-negotiable for every project this is copied into.
+#
+# Overwrites the commit message outright with a single line naming the
+# version — never appended to, never combined with a description. The
+# description of what changed lives in CHANGELOG.md's entry for that
+# version instead (see scripts/git-hooks/pre-commit); this hook's only
+# job is making sure `git log` reads as a clean, searchable version
+# timeline, not a second, competing home for release notes.
+#
+#   VERSION x.y.z            — this commit bumped VERSION (pre-commit ran)
+#   VERSION x.y.z-updated    — this commit didn't touch VERSION; x.y.z is
+#                              still the current, unbumped version
+#
+# Idempotent by construction: overwriting produces the same result on a
+# `git commit --amend`, so there's no append-guard to get wrong (unlike
+# an append-based version of this hook, which needs one).
+#
+# Installed via:  git config core.hooksPath scripts/git-hooks
+
+repo_root=$(git rev-parse --show-toplevel)
+msg_file="$1"
+
+# Same target branch as scripts/git-hooks/pre-commit — keep the two in
+# sync if this is changed.
+TARGET_BRANCH="main"
+branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+if [ "$branch" != "$TARGET_BRANCH" ]; then
+    exit 0
+fi
+
+# A merge commit's message is its own thing — not a place for a version
+# tag that names a single change.
+if [ -f "$(git rev-parse --git-dir)/MERGE_HEAD" ]; then
+    exit 0
+fi
+
+current_version=$(tr -d '[:space:]' < "$repo_root/VERSION")
+
+if git diff --cached --name-only -- VERSION | grep -qx "VERSION"; then
+    line="VERSION $current_version"
+else
+    line="VERSION $current_version-updated"
+fi
+
+printf '%s\n' "$line" > "$msg_file"
+
+exit 0

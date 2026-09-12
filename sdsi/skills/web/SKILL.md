@@ -218,45 +218,20 @@ cloud container platform and a self-hosted LAN deployment.
 
 ## 5. Automating SDSI §17's Versioning Policy
 
-SDSI §17 already states the rule in full ("bump `VERSION` on any
-code-touching commit, even PATCH-only; skip docs-only changes; promote
-`CHANGELOG.md`'s Unreleased section to a new heading in the same
-motion"). It's genuinely automatable with a git hook rather than left to
-manual discipline, once a project has exactly one committer (no merge-race
-concern to design around).
+SDSI §17 already states the full mechanics — non-negotiable, not just
+"automatable" — including the shipped `scripts/git-hooks/{pre-commit,commit-msg}`
+and `scripts/python/bump_changelog.py` this plugin provides to copy into
+any new project. Nothing about that mechanism is web/Django-specific, so
+it isn't restated here (a second, drifting copy of §17 is exactly the
+duplication this document's own rule above warns against) — one lesson
+from actually building and testing it against a real repo, `flammeau`,
+that's worth keeping regardless of stack:
 
-- **Two hooks, not one**: `pre-commit` decides whether the commit touches
-  code, bumps `VERSION`, and promotes `CHANGELOG.md`'s Unreleased section
-  — all staged into the same commit. `commit-msg` appends the
-  `VERSION x.y.z` trailer to the message, because the message doesn't
-  exist yet at `pre-commit` time (hook order is `pre-commit` →
-  `prepare-commit-msg` → the message is finalized → `commit-msg` →
-  `post-commit`).
-- **A simple, file-path heuristic decides "docs-only"** (everything
-  staged falls under `docs/` or matches `*.md` anywhere) rather than
-  trying to infer semantic intent from a diff. Good enough in practice,
-  and legible enough that a human can predict what will and won't trigger
-  a bump.
-- **Respect a bump already made by hand.** SDSI §17's MINOR/MAJOR
-  distinction (a new required setting vs. a breaking change) isn't
-  something a hook can infer from a diff — if `VERSION` is *already*
-  staged with a change when the hook runs, treat that as the developer's
-  deliberate choice and only handle the `CHANGELOG.md` promotion, never
-  overwrite it with an auto-computed PATCH bump.
-- **Store hook scripts in a tracked repo folder** (e.g. `scripts/git-hooks/`)
-  and wire them with `git config core.hooksPath <folder>` — never rely on
-  copying into the untracked `.git/hooks/` directory by hand. Add the
-  `git config` line to whatever script already bootstraps local dev, so a
-  fresh clone gets it wired automatically.
-- **Test a new hook against a real, throwaway commit before trusting it**
-  — create a trivial staged change, commit for real, and inspect the
-  actual result (the bumped file, the promoted changelog, the message
-  trailer) rather than reasoning about the script from its source alone.
 - **Never use `git reset --hard` to undo a test commit (or any commit)
   when the working tree might hold other, unrelated uncommitted changes**
   — `--hard` discards *every* uncommitted change to every tracked file,
   not just what was in the commit being undone. This is exactly the
-  mistake made while building and testing this hook: an unrelated,
+  mistake made while building and testing this hook pair: an unrelated,
   in-progress file move (with several supporting doc/script edits still
   unstaged) was silently wiped out by a `reset --hard` meant only to
   discard a one-file test commit. `git reset --soft` (keeps everything

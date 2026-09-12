@@ -14,6 +14,12 @@ SDSI
 ├── references/
 │   └── shared-context.md  — the base standard. Every skill in this plugin
 │                             reads this file first, always.
+├── scripts/                — §17's version/changelog policy, shipped as
+│   ├── git-hooks/            working code, not just prose — copy these
+│   │   ├── pre-commit         into any new project's own scripts/ (§24)
+│   │   └── commit-msg
+│   └── python/
+│       └── bump_changelog.py
 └── skills/
     ├── sdsi/  — /sdsi:sdsi — thin pointer to shared-context.md; the name a
     │            skill in a DIFFERENT plugin invokes to get the standard
@@ -62,6 +68,33 @@ No other plugin or configuration required. Install it so the standard is
 available in every session and every project without needing a local copy —
 the stack skills (`web`, `mw`, `cli`) only add value on top of it once it's
 there.
+
+## Versioning & changelog — non-negotiable, every project
+
+SDSI §17 isn't optional guidance — it's enforced by a git hook pair this
+plugin ships as working code, not just prose:
+
+- **`pre-commit`** bumps `VERSION` (PATCH, unless a MINOR/MAJOR bump was
+  already staged by hand) and promotes `CHANGELOG.md`'s `## 🚧 Unreleased`
+  section into a new version heading, in the same commit — and **refuses
+  the commit outright if `Unreleased` is empty**, so a version can never
+  ship with nothing said about what changed. Docs-only commits are exempt
+  entirely.
+- **`commit-msg`** overwrites the commit message outright with `VERSION
+  x.y.z` (a bump) or `VERSION x.y.z-updated` (no bump) — never appended
+  to whatever was typed. `git log` reads as a clean version timeline;
+  the actual description of the change lives in `CHANGELOG.md` instead.
+
+Copy `scripts/git-hooks/{pre-commit,commit-msg}` and
+`scripts/python/bump_changelog.py` into a new project's own `scripts/`,
+then run:
+
+```
+git config core.hooksPath scripts/git-hooks
+```
+
+Full policy, the version-bump semantics table, and the changelog's fixed
+structure are in `references/shared-context.md` §17.
 
 ## Usage
 

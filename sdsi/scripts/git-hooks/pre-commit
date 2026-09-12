@@ -1,0 +1,94 @@
+#!/bin/sh
+# SDSI §17 — non-negotiable for every project this is copied into.
+#
+# Every code-touching commit to $TARGET_BRANCH bumps VERSION (PATCH,
+# unless a MINOR/MAJOR bump was already staged by hand) and promotes
+# CHANGELOG.md's "## 🚧 Unreleased" section to a new version heading — in
+# the same commit, so a version number and its changelog entry can never
+# drift apart. A docs-only commit (everything staged is under docs/ or is
+# a *.md file anywhere) is exempt entirely: no bump, no changelog work.
+#
+# The promotion step (scripts/python/bump_changelog.py) refuses the
+# commit outright if Unreleased has nothing in it yet — an empty entry
+# defeats the entire point of this policy: "read the CHANGELOG to see
+# what changed." Add the bullet(s) first (any of the four subsections),
+# then commit. Deliberately not a release? `git commit --no-verify`.
+#
+# Installed via:  git config core.hooksPath scripts/git-hooks
+# See scripts/git-hooks/commit-msg for the matching commit-message rewrite.
+
+set -e
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+# Adjust for a trunk-based main vs. a release-branch workflow. Feature
+# branches are exempt on purpose — bumping on every WIP commit before a
+# branch even merges is pure churn; the bump belongs to the commit that
+# actually lands on the target branch.
+TARGET_BRANCH="main"
+branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+if [ "$branch" != "$TARGET_BRANCH" ]; then
+    exit 0
+fi
+
+# A merge brings in commits already tagged and changelogged on their own
+# branch — nothing new here to bump or promote.
+if [ -f "$(git rev-parse --git-dir)/MERGE_HEAD" ]; then
+    exit 0
+fi
+
+staged=$(git diff --cached --name-only)
+if [ -z "$staged" ]; then
+    exit 0
+fi
+
+# Docs-only commit — every staged file is under docs/ or is a *.md file
+# anywhere. Skip the bump and the changelog work entirely.
+code_touched=0
+for file in $staged; do
+    case "$file" in
+        docs/*|*.md|*.MD) ;;
+        *) code_touched=1 ;;
+    esac
+done
+if [ "$code_touched" -eq 0 ]; then
+    exit 0
+fi
+
+version_file="VERSION"
+
+# A MINOR/MAJOR-vs-PATCH call isn't inferable from a diff (SDSI §17's
+# table), so a bump already staged by hand is respected as-is — this
+# hook only ever auto-computes a PATCH bump.
+if git diff --cached --name-only -- "$version_file" | grep -qx "$version_file"; then
+    new_version=$(tr -d '[:space:]' < "$version_file")
+else
+    current_version=$(tr -d '[:space:]' < "$version_file")
+    major=$(echo "$current_version" | cut -d. -f1)
+    minor=$(echo "$current_version" | cut -d. -f2)
+    patch=$(echo "$current_version" | cut -d. -f3)
+    new_version="$major.$minor.$((patch + 1))"
+    printf '%s\n' "$new_version" > "$version_file"
+    git add "$version_file"
+fi
+
+python_bin=""
+for candidate in python3 py python; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+        python_bin="$candidate"
+        break
+    fi
+done
+if [ -z "$python_bin" ]; then
+    printf '\n  COMMIT REFUSED -- no python found on PATH, cannot promote CHANGELOG.md\n\n' >&2
+    printf '  Install python3, or promote CHANGELOG.md by hand and commit --no-verify.\n\n' >&2
+    exit 1
+fi
+
+if ! "$python_bin" scripts/python/bump_changelog.py "$new_version"; then
+    exit 1
+fi
+git add CHANGELOG.md
+
+exit 0
