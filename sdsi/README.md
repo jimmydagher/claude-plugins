@@ -15,7 +15,7 @@ SDSI
 │   └── shared-context.md  — the base standard. Every skill in this plugin
 │                             reads this file first, always.
 ├── scripts/                — §17's version/changelog policy, shipped as
-│   ├── git-hooks/            working code, not just prose — copy these
+│   ├── git/                working code, not just prose — copy these
 │   │   ├── pre-commit         into any new project's own scripts/ (§24)
 │   │   └── commit-msg
 │   └── python/
@@ -85,12 +85,12 @@ plugin ships as working code, not just prose:
   to whatever was typed. `git log` reads as a clean version timeline;
   the actual description of the change lives in `CHANGELOG.md` instead.
 
-Copy `scripts/git-hooks/{pre-commit,commit-msg}` and
+Copy `scripts/git/{pre-commit,commit-msg}` and
 `scripts/python/bump_changelog.py` into a new project's own `scripts/`,
 then run:
 
 ```
-git config core.hooksPath scripts/git-hooks
+git config core.hooksPath scripts/git
 ```
 
 Full policy, the version-bump semantics table, and the changelog's fixed

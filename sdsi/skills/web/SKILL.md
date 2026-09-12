@@ -219,7 +219,7 @@ cloud container platform and a self-hosted LAN deployment.
 ## 5. Automating SDSI §17's Versioning Policy
 
 SDSI §17 already states the full mechanics — non-negotiable, not just
-"automatable" — including the shipped `scripts/git-hooks/{pre-commit,commit-msg}`
+"automatable" — including the shipped `scripts/git/{pre-commit,commit-msg}`
 and `scripts/python/bump_changelog.py` this plugin provides to copy into
 any new project. Nothing about that mechanism is web/Django-specific, so
 it isn't restated here (a second, drifting copy of §17 is exactly the

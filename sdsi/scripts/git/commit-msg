@@ -4,7 +4,7 @@
 # Overwrites the commit message outright with a single line naming the
 # version — never appended to, never combined with a description. The
 # description of what changed lives in CHANGELOG.md's entry for that
-# version instead (see scripts/git-hooks/pre-commit); this hook's only
+# version instead (see scripts/git/pre-commit); this hook's only
 # job is making sure `git log` reads as a clean, searchable version
 # timeline, not a second, competing home for release notes.
 #
@@ -16,12 +16,12 @@
 # `git commit --amend`, so there's no append-guard to get wrong (unlike
 # an append-based version of this hook, which needs one).
 #
-# Installed via:  git config core.hooksPath scripts/git-hooks
+# Installed via:  git config core.hooksPath scripts/git
 
 repo_root=$(git rev-parse --show-toplevel)
 msg_file="$1"
 
-# Same target branch as scripts/git-hooks/pre-commit — keep the two in
+# Same target branch as scripts/git/pre-commit — keep the two in
 # sync if this is changed.
 TARGET_BRANCH="main"
 branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")

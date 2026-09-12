@@ -14,8 +14,8 @@
 # what changed." Add the bullet(s) first (any of the four subsections),
 # then commit. Deliberately not a release? `git commit --no-verify`.
 #
-# Installed via:  git config core.hooksPath scripts/git-hooks
-# See scripts/git-hooks/commit-msg for the matching commit-message rewrite.
+# Installed via:  git config core.hooksPath scripts/git
+# See scripts/git/commit-msg for the matching commit-message rewrite.
 
 set -e
 

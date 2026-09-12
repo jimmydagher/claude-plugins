@@ -138,12 +138,12 @@ project-root/
 │       └── prod.yaml
 ├── docs/                       # operational documentation — see §20
 ├── scripts/                    # deploy/setup/maintenance tooling, not
-│   ├── git-hooks/              #   shipped application code — see below.
+│   ├── git/                    #   shipped application code — see below.
 │   │                           #   Non-negotiable, every project: §17's
 │   │                           #   version-bump/changelog-promotion hook
 │   │                           #   pair (pre-commit, commit-msg) lives
 │   │                           #   here, copied from the sdsi plugin's
-│   │                           #   own scripts/git-hooks/ at setup (§24)
+│   │                           #   own scripts/git/ at setup (§24)
 │   ├── ps1/
 │   └── python/                 #   scripts/python/bump_changelog.py is
 │                                #   the other §17 hook resource
@@ -182,7 +182,7 @@ first use.
 **`scripts/`** holds operational tooling — deployment, environment setup,
 config publishing, one-off maintenance — organized by language
 (`scripts/ps1/`, `scripts/python/`, and so on as needed), **plus
-`scripts/git-hooks/`, which is not optional.** §17's version-bump/
+`scripts/git/`, which is not optional.** §17's version-bump/
 changelog-promotion hook pair lives there in every project, full stop —
 copied in at scaffolding time (§24), not written from scratch per
 project. It's support tooling for running and operating the project, not
@@ -835,10 +835,10 @@ tested, before any feature work).
 **Required, not optional tooling** — the policy above is enforced by a
 git hook pair, not left to manual discipline, on every project this
 standard governs. The `sdsi` plugin ships a working, tested pair at its
-own `scripts/git-hooks/` (`pre-commit`, `commit-msg`) plus the promotion
+own `scripts/git/` (`pre-commit`, `commit-msg`) plus the promotion
 helper at `scripts/python/bump_changelog.py` — copy all three into a new
 project's own `scripts/` (§24's day-one skeleton does this) and wire them
-with `git config core.hooksPath scripts/git-hooks` rather than writing
+with `git config core.hooksPath scripts/git` rather than writing
 the mechanism from scratch per project. A very high-commit-concurrency
 project will occasionally see an ordinary merge conflict on `VERSION` —
 resolve it by hand like any other conflict; that's not a reason to skip
@@ -878,8 +878,8 @@ the hooks.
 - **A merge commit is exempt from both hooks** — it brings in commits
   already tagged and changelogged on their own branch, and its message
   isn't the place to re-describe them.
-- **Store hook scripts in `scripts/git-hooks/`** (§3) and wire them via
-  `git config core.hooksPath scripts/git-hooks` — never rely on copying
+- **Store hook scripts in `scripts/git/`** (§3) and wire them via
+  `git config core.hooksPath scripts/git` — never rely on copying
   into the untracked, unversioned `.git/hooks/` directory by hand. Wire
   this into whatever script already bootstraps local dev, so a fresh
   clone gets it automatically.
@@ -1308,10 +1308,10 @@ this sequence rather than treating it as an ordinary feature request.
      `main.py` (§3), even if each starts nearly empty.
    - `tests/` (§14), `config/default.yaml` + `config/override/` (§6),
      `docs/` (§20), `scripts/` (§3), `docker/`, `.vscode/` (§18).
-   - **Copy `scripts/git-hooks/{pre-commit,commit-msg}` and
+   - **Copy `scripts/git/{pre-commit,commit-msg}` and
      `scripts/python/bump_changelog.py` from the `sdsi` plugin's own
      resources** into the new project's `scripts/`, then run
-     `git config core.hooksPath scripts/git-hooks` — part of this same
+     `git config core.hooksPath scripts/git` — part of this same
      skeleton commit, not a later follow-up (§17, non-negotiable).
    - Commit this skeleton on its own, before any feature work — it's the
      thing every later session assumes already exists.

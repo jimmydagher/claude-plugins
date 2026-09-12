@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Promotes CHANGELOG.md's Unreleased section to a new version heading.
 
-Run by scripts/git-hooks/pre-commit as part of every code-touching commit
+Run by scripts/git/pre-commit as part of every code-touching commit
 to the target branch (SDSI.md §17) — not meant to be run by hand in
 normal use. Renames the "## 🚧 Unreleased" heading to "## 🆕VERSION
 <version> 📅 <date>" (its own bullets, whatever was filled in during the
