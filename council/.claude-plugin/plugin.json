@@ -1,0 +1,9 @@
+{
+  "name": "council",
+  "version": "1.0.0",
+  "description": "A council of contractor-style reviewer lenses for documentation, designs, plans, and business proposals — not code (see the code-reviewer plugin for that). council:it runs the four IT lenses (security, standards, efficiency, infrastructure); council:bu runs the four BU lenses (operations, finance, strategy, legal); council:all runs all eight and converges one company-wide verdict. Each lens is invoked individually too (council:it-security, council:bu-finance, etc.) for a single point of view. Supersedes the earlier council-of-claude plugin, which named each lens after a person (Tom, Mike, Pedro, Hector, Emma, John, Natalie) — replaced here with functional names so nothing has to be memorized to invoke the right one.",
+  "author": {
+    "name": "Jimmy Dagher"
+  },
+  "keywords": ["review", "documentation", "plans", "proposals", "business review", "security", "standards", "efficiency", "infrastructure", "operations", "finance", "strategy", "legal", "corp legal"]
+}

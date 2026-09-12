@@ -1,0 +1,13 @@
+# Personal environment notes — not part of the plugin catalog itself
+SETUP.md
+
+# Superseded by this repo's own root marketplace.json
+claude-plugins-marketplace/
+
+# Working files a plugin (code-reviewer) writes into a *target* project,
+# never into this repo itself — excluded here just in case
+_scaffolding/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

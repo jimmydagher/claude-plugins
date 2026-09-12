@@ -1,0 +1,23 @@
+{
+  "name": "jimmy-plugins",
+  "owner": {
+    "name": "Jimmy Dagher"
+  },
+  "plugins": [
+    {
+      "name": "sdsi",
+      "source": "./sdsi",
+      "description": "Software Development Standard Instructions — the base coding standard plus stack-specific companions (sdsi:web, sdsi:mw, sdsi:cli)."
+    },
+    {
+      "name": "code-reviewer",
+      "source": "./code-reviewer",
+      "description": "Staged workflow (intake, catalog, strategy, execute, validate) for modernizing, refactoring, or remediating an existing codebase."
+    },
+    {
+      "name": "council",
+      "source": "./council",
+      "description": "Contractor-style reviewer lenses for documentation, designs, plans, and business proposals — council:it, council:bu, council:all."
+    }
+  ]
+}
